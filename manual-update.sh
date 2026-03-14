@@ -472,9 +472,24 @@ for i in "${themes[@]}"; do
   # git pull upstream v4 -X theirs --no-edit || git pull upstream v4 -X theirs --allow-unrelated-histories --no-edit
   git pull upstream v4 -X theirs --no-edit || git pull upstream v4 -X theirs --allow-unrelated-histories --no-edit
   git pull upstream v5 -X theirs --no-edit || git pull upstream v5 -X theirs --allow-unrelated-histories --no-edit
+  # Resolve modify/delete conflicts from v4→v5 migration by accepting v5 deletions
+  if git diff --name-only --diff-filter=U 2>/dev/null | grep -q .; then
+    git diff --name-only --diff-filter=U | xargs git rm -f
+    git -c core.editor=true merge --continue || git commit -a --no-edit -m "Resolved v5 merge conflicts"
+  fi
   git fetch template v5
   git pull template v5 -X theirs --no-edit || git pull template v5 -X theirs --allow-unrelated-histories --no-edit
+  # Resolve any remaining conflicts from template pull
+  if git diff --name-only --diff-filter=U 2>/dev/null | grep -q .; then
+    git diff --name-only --diff-filter=U | xargs git rm -f
+    git -c core.editor=true merge --continue || git commit -a --no-edit -m "Resolved template merge conflicts"
+  fi
   git pull origin v4 -X theirs --no-edit || git pull origin v4 -X theirs --allow-unrelated-histories --no-edit
+  # Resolve any remaining conflicts from origin pull
+  if git diff --name-only --diff-filter=U 2>/dev/null | grep -q .; then
+    git diff --name-only --diff-filter=U | xargs git rm -f
+    git -c core.editor=true merge --continue || git commit -a --no-edit -m "Resolved origin merge conflicts"
+  fi
   # git pull origin v5 -X theirs --no-edit || git pull origin v5 -X theirs --allow-unrelated-histories --no-edit
   # git pull template v5 -X theirs --no-edit || git pull template v5 -X theirs --allow-unrelated-histories --no-edit
   # rm .github/workflows/deploy-preview.yml
